@@ -204,12 +204,12 @@ Every analysis is stored as a semantic document. This enables our "Historical Tr
 
 ## 📞 8. Support & Contact
 
-**CarbonSphere AI Support**
-- **Lead Developer**: S Sameer (Administrator)
-- **Infrastructure**: MongoDB Atlas / Cloud Services
-- **Status**: Enterprise Ready
+**For Questions:**
+- Email: sameer.s@agilecas.com
+
 
 ---
 
 **Document Version**: 1.0  
 **Generated Date**: February 12, 2026
+
