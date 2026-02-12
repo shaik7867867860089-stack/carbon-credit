@@ -74,11 +74,68 @@ flowchart TD
 4. **CO2 Equivalent**: Using the atomic mass ratio (44/12), 1 Ton of Carbon = **3.67 Tons of CO2**.
 5. **Credit Generation**: 1 Carbon Credit = 1 Ton of sequestered CO2.
 
-### 3.2 AI Tree Segmentation (Computer Vision)
+### 3.2 Core Implementation: Carbon Calculation
+The following Python logic (from `carbon_service.py`) demonstrates how the mathematical model is executed:
+
+```python
+# 1. Estimate Biomass Density based on NDVI Health Index
+if ndvi < 0.2:
+    biomass_density = 0 # Non-vegetated
+elif ndvi < 0.5:
+    biomass_density = 50 * ndvi # Shrub/Grass
+else:
+    biomass_density = 150 * ndvi # Dense Forest
+
+# 2. Calculate Total Biomass
+effective_area = area_hectares * tree_cover_ratio
+total_biomass = effective_area * biomass_density
+
+# 3. Convert Biomass to Carbon Stock (50% Carbon Fraction)
+carbon_stock = total_biomass * 0.5
+
+# 4. Convert Carbon to CO2 Equivalent (Atomic mass 44/12 ≈ 3.67)
+co2_equivalent = carbon_stock * 3.67
+```
+
+**📖 What This Code Does (Plain English):**
+- **Step 1**: It checks the satellite health index (NDVI). If the value is high (green), it assigns a higher biomass weight.
+- **Step 2**: It multiplies the real-world area by the percentage of trees detected by the AI to find the "active" forest area.
+- **Step 3**: It applies the scientific constant that roughly 50% of a tree's dry weight is actual carbon.
+- **Step 4**: It converts that stored carbon into a financial "Carbon Credit" based on its CO2 offset value.
+
+### 3.3 AI Tree Segmentation (Computer Vision)
 The "HSV Tuned Model" works by analyzing the color spectrum of the forest:
 - **Green-Space Masking**: Converts images to the HSV (Hue, Saturation, Value) space.
 - **Sensitivity Tuning**: Allows the user to expand or contract the green detection range to account for different tree species or lighting conditions.
 - **Precision Extraction**: Calculates the ratio of "Green Pixels" vs "Total Pixels" to get the canopy density.
+
+### 3.4 Core Implementation: Canopy Detection
+The primary AI logic (from `ai_service.py`) uses OpenCV to isolate forest canopy:
+
+```python
+# 1. Convert Image to HSV (Hue, Saturation, Value) for color isolation
+hsv = cv2.cvtColor(img_np, cv2.COLOR_RGB2HSV)
+
+# 2. Define the 'Green' range based on User Sensitivity Settings
+# Base Hue: 35-85 (Green)
+hue_margin = int((sensitivity / 100) * 20)
+lower_green = np.array([35 - hue_margin, 40, 40])
+upper_green = np.array([85 + hue_margin, 255, 255])
+
+# 3. Create a Binary Mask (Isolates only green tree pixels)
+mask = cv2.inRange(hsv, lower_green, upper_green)
+
+# 4. Calculate Density Ratio
+total_pixels = mask.size
+green_pixels = np.count_nonzero(mask)
+tree_cover_ratio = green_pixels / total_pixels
+```
+
+**📖 What This Code Does (Plain English):**
+- **Step 1**: It shifts the image into a "Color Map" (HSV) so we can look specifically at green shades without the interference of brightness or shadows.
+- **Step 2**: It creates a "Detection Window". If the user increases sensitivity to 100%, the AI broadens its definition of "Green" to catch lighter or yellower leaves.
+- **Step 3**: It creates a black-and-white mask where the trees are White and everything else is Black.
+- **Step 4**: It counts the white pixels vs the total pixels to determine exactly how much of that land is covered by trees.
 
 ---
 
