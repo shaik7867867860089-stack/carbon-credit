@@ -204,12 +204,11 @@ Every analysis is stored as a semantic document. This enables our "Historical Tr
 
 ## 📞 8. Support & Contact
 
-**For Questions:**
-- Email: sameer.s@agilecas.com
-
+**CarbonSphere AI Support**
+- **Lead Developer**: S Sameer 
+- 
 
 ---
 
 **Document Version**: 1.0  
 **Generated Date**: February 12, 2026
-
