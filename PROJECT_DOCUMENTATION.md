@@ -137,7 +137,95 @@ tree_cover_ratio = green_pixels / total_pixels
 - **Step 3**: It creates a black-and-white mask where the trees are White and everything else is Black.
 - **Step 4**: It counts the white pixels vs the total pixels to determine exactly how much of that land is covered by trees.
 
+### 3.5 Advanced Model: ResNet50 (Classification)
+While HSV deals with color, **ResNet50** is a Deep Learning model that understands *shapes and textures*. It is used to first classify if the image is actually a forest.
+
+```python
+def classify_resnet(self, img_tensor):
+    """
+    Determines if the image contains Forest (Class 1) or Non-Forest (Class 0).
+    """
+    with torch.no_grad():
+        # Forward pass through 50 layers of Neural Network
+        prediction = self.resnet50(img_tensor)
+        probabilities = torch.softmax(prediction, dim=1)
+        
+    forest_prob = probabilities[0][1].item() # Probability of 'Forest' class
+    
+    # If prob > 90%, we assume high density
+    if forest_prob > 0.9:
+        return 0.95 # Highly Dense Forest
+    else:
+        return 0.10 # Likely Shrub/Urban
+```
+
+**📖 Plain English:**
+- ResNet is like a "Forest Detective". It doesn't look at pixels; it looks at the whole picture.
+- It asks: "Does this look like a forest?"
+- If it sees trees, it returns a high probability (e.g., 98%). If it sees a city, it returns low (e.g., 5%).
+
+### 3.6 Advanced Model: U-Net (Semantic Segmentation)
+**U-Net** is the Gold Standard for biomedical and environmental segmentation. Unlike ResNet (which gives one label per image), U-Net gives a label for **every single pixel**.
+
+```python
+def segment_unet(self, img_tensor):
+    """
+    Generates a pixel-perfect mask where 1=Tree, 0=Background
+    """
+    with torch.no_grad():
+        # The 'U' shape architecture preserves fine details
+        output_mask = self.unet(img_tensor)
+        
+    # Thresholding: Any pixel with >50% confidence is marked as Tree
+    binary_mask = (output_mask > 0.5).float()
+    
+    # Calculate exact coverage
+    tree_pixels = torch.sum(binary_mask)
+    total_pixels = binary_mask.numel()
+    
+    return tree_pixels / total_pixels
+```
+
+**📖 Plain English:**
+- U-Net is like a "Digital Highlighter".
+- It traces the exact outline of every single tree, separating it from roads, rivers, or houses.
+- It is much more accurate than HSV because it doesn't get confused by green roofs or green swimming pools—it knows they aren't trees!
+
 ---
+
+## 💾 3.7 Database Data Structure (MongoDB)
+All data is stored in **MongoDB Atlas** as JSON documents. This allows flexibility to add new metrics (like "Soil Quality") without breaking the database.
+
+**Sample Document:**
+```json
+{
+  "_id": "65cb...a1b2",
+  "timestamp": "2026-02-12T10:00:00Z",
+  "location": {
+    "lat": 13.6355,
+    "lon": 79.4236
+  },
+  "ai_metrics": {
+    "model": "U-Net",
+    "tree_cover_ratio": 0.82,
+    "confidence": 0.98
+  },
+  "satellite_data": {
+    "source": "Sentinel-2",
+    "ndvi": 0.76
+  },
+  "carbon_analysis": {
+    "biomass_tons": 120.5,
+    "carbon_credits": 221.3
+  }
+}
+```
+**Why MongoDB?**
+- **Speed**: Handles millions of rigid JSON records instantly.
+- **Geo-Spatial**: Has built-in tools to query "Find all forests within 50km of London".
+
+---
+
 
 ## 🔄 4. Processing Pipeline
 
@@ -205,8 +293,8 @@ Every analysis is stored as a semantic document. This enables our "Historical Tr
 ## 📞 8. Support & Contact
 
 **CarbonSphere AI Support**
-- **Lead Developer**: S Sameer 
-- 
+- **Lead Developer**: S Sameer (Administrator)
+
 
 ---
 
